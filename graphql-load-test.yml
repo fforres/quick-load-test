@@ -1,0 +1,103 @@
+config:
+  target: https://api.communityos.io/graphql
+  phases:
+    - duration: 300 # Duration of the test in seconds (5 minutes)
+      arrivalRate: 100 # Number of requests per second
+      rampTo: 150 # Gradually ramp up to 100 requests per second
+  http:
+    headers:
+      Authorization: "Bearer "
+scenarios:
+  - name: "Create and fetch messages flow"
+    flow:
+      - post:
+          url: "/"
+          json:
+            query: |
+              query myTeam($input: PaginatedInputTeamSearchValues!, $myTicketInput: PaginatedInputMyTicketsSearchValues!) {
+                me {
+                  id
+                  email
+                  name
+                  lastName
+                  username
+                  bio
+                  pronouns
+                  imageUrl
+                  __typename
+                }
+                searchTeams(input: $input) {
+                    data {
+                      ...Team
+                    __typename
+                  }
+                  __typename
+                }
+                myTickets(input: $myTicketInput) {
+                    data {
+                      id
+                    approvalStatus
+                    createdAt
+                    redemptionStatus
+                    ticketTemplate {
+                        id
+                      name
+                      description
+                      startDateTime
+                      __typename
+                    }
+                    __typename
+                  }
+                  __typename
+                }
+              }
+              fragment Team on TeamRef {
+                  id
+                description
+                name
+                status
+                users {
+                    id
+                  role
+                  status
+                  user {
+                      id
+                    email
+                    name
+                    lastName
+                    username
+                    bio
+                    pronouns
+                    imageUrl
+                    __typename
+                  }
+                  __typename
+                }
+                event {
+                    id
+                  name
+                  startDateTime
+                  endDateTime
+                  description
+                  __typename
+                }
+                __typename
+              }
+            variables:
+              input:
+                search:
+                  userIds: null
+                  eventIds: null
+                  name: null
+                  status:
+                    - accepted
+                    - invited
+                    - not_accepted
+                    - waiting_resolution
+                  teamIds: null
+                pagination:
+                  page: 0
+                  pageSize: 100
+          # capture:
+          #   json: "$.data.createUser.email"
+          #   as: "userEmail"
